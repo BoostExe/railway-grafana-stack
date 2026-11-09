@@ -14,6 +14,15 @@ datasources:
     orgId: 1
     uid: grafana_lokiq
     url: $LOKI_INTERNAL_URL
+    jsonData:
+      # Loki stores OTLP trace ids as `trace_id` structured metadata; link them to Tempo.
+      derivedFields:
+        - name: trace_id
+          matcherType: label
+          matcherRegex: trace_id
+          datasourceUid: grafana_tempo
+          url: '$${__value.raw}'
+          urlDisplayLabel: Open trace
     user:
     database:
     basicAuth:
@@ -38,6 +47,14 @@ datasources:
     orgId: 1
     uid: grafana_tempo
     url: $TEMPO_INTERNAL_URL
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: grafana_lokiq
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        filterByTraceId: true
+        customQuery: true
+        query: '{service_name="bxtool_service"} | trace_id="$${__trace.traceId}"'
     user:
     database:
     basicAuth:
